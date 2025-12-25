@@ -52,8 +52,14 @@ namespace InventoryServer.Networking
 
         private void HandleLogin()
         {
-            Identity.Username = _packetReader.ReadMessage();
-            Console.WriteLine($"{Identity.Username} has logged!");
+            string username = _packetReader.ReadMessage();
+            string rawPassword = _packetReader.ReadMessage();
+            string hashedPassword = SecurityHelper.ComputeHash(rawPassword);
+
+            Identity.Username = username;
+            Identity.PasswordHash = hashedPassword;
+
+            Console.WriteLine($"[Login] {Identity.Username} connected with Hash: {Identity.PasswordHash}");
 
             var welcomePacket = new PacketBuilder();
             welcomePacket.WriteOpCode(2);

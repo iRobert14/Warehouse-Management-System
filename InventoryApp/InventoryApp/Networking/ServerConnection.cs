@@ -20,7 +20,7 @@ namespace InventoryClient
             _serverSocket = new TcpClient();
         }
 
-        public void ConnectToServer(string username)
+        public void ConnectToServer(string username,string password)
         {
             if (!_serverSocket.Connected)
             {
@@ -28,11 +28,12 @@ namespace InventoryClient
                 PacketReader = new PacketReader(_serverSocket.GetStream());
 
 
-                if (!string.IsNullOrEmpty(username))
+                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 {
                     var loginPacket = new PacketBuilder();
                     loginPacket.WriteOpCode(1);
                     loginPacket.WriteMessage(username);
+                    loginPacket.WriteMessage(password);
                     var data = loginPacket.GetPackageBytes();
                     _serverSocket.GetStream().Write(data, 0, data.Length);
 
@@ -61,7 +62,7 @@ namespace InventoryClient
                 }
                 catch
                 {
-                    Console.WriteLine("Conexiune pierdută.");
+                    Console.WriteLine("Connection lost!");
                     break;
                 }
             }

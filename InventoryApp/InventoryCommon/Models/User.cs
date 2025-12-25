@@ -17,7 +17,7 @@ namespace InventoryCommon.Models
         Guid UserId { get; set; }
         public string Username { get; set; }
         public UserRole UserRole { get; set; }
-        string Password { get; set; }
+        public string PasswordHash { get; set; }
 
 
     }

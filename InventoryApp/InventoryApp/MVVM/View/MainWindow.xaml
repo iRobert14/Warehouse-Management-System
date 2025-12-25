@@ -5,8 +5,34 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:InventoryApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="600" Width="900"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Background="Transparent"
+        AllowsTransparency="True">
 
-    </Grid>
+    <Border Background="#272537" CornerRadius="20">
+        <Grid>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+                <TextBox Style="{StaticResource UsernameBox}"
+                     Margin="0,0,0,15"
+                     Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <PasswordBox x:Name="UserPasswordBox"
+                             Style="{StaticResource PasswordBox}"
+                             Margin="0,0,0,15"/>
+
+                <Button Content="Login"
+                    Style="{StaticResource LoginButton}"
+                    Command="{Binding ConnectToServerCommand}"
+                    CommandParameter="{Binding ElementName=UserPasswordBox}"/>
+
+            </StackPanel>
+        </Grid>
+    </Border>
+
+
+
+
 </Window>

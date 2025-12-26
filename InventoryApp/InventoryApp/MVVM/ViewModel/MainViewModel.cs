@@ -26,7 +26,8 @@ namespace InventoryClient.MVVM.ViewModel
         public MainViewModel()
         {
             _server = new ServerConnection();
-            _server.MessageReceivedEvent += HandleWelcome;
+            _server.WelcomeMessage += HandleWelcome;
+            _server.NotInOurDataBaseMessage += HandleErrorLogin;
 
 
             ConnectToServerCommand = new RelayCommand(o =>
@@ -59,6 +60,12 @@ namespace InventoryClient.MVVM.ViewModel
             Application.Current.Dispatcher.Invoke(() => MessageBox.Show(message));
             
         }
+        private void HandleErrorLogin(string message)
+        {
+            Application.Current.Dispatcher.Invoke(() => MessageBox.Show(message));
+
+        }
+        
     }
 
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace InventoryClient
 {
@@ -13,33 +14,46 @@ namespace InventoryClient
         private TcpClient _serverSocket;
         public PacketReader PacketReader;
 
-        public event Action<string>  MessageReceivedEvent;
+        public event Action<string> WelcomeMessage;
+        public event Action<string> NotInOurDataBaseMessage;
 
         public ServerConnection()
         {
             _serverSocket = new TcpClient();
         }
 
-        public void ConnectToServer(string username,string password)
+        public void ConnectToServer(string username, string password)
         {
-            if (!_serverSocket.Connected)
+
+            try
             {
-                _serverSocket.Connect("127.0.0.1", 7891);
-                PacketReader = new PacketReader(_serverSocket.GetStream());
-
-
-                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                if (_serverSocket == null || !_serverSocket.Connected)
                 {
-                    var loginPacket = new PacketBuilder();
-                    loginPacket.WriteOpCode(1);
-                    loginPacket.WriteMessage(username);
-                    loginPacket.WriteMessage(password);
-                    var data = loginPacket.GetPackageBytes();
-                    _serverSocket.GetStream().Write(data, 0, data.Length);
+                    _serverSocket = new TcpClient();
+                    _serverSocket.Connect("127.0.0.1", 7891);
+                    PacketReader = new PacketReader(_serverSocket.GetStream());
 
                     Task.Run(() => ListenFromServer());
-
                 }
+
+                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    {
+                        var loginPacket = new PacketBuilder();
+                        loginPacket.WriteOpCode(1);
+                        loginPacket.WriteMessage(username);
+                        loginPacket.WriteMessage(password);
+
+                        var data = loginPacket.GetPackageBytes();
+                        _serverSocket.GetStream().Write(data, 0, data.Length);
+
+
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Server is not opened or the connection was refused!");
+                _serverSocket = new TcpClient();
             }
 
         }
@@ -51,12 +65,15 @@ namespace InventoryClient
                 {
 
                     byte opcode = PacketReader.ReadOpCode();
+                    string msg = PacketReader.ReadMessage();
 
                     switch (opcode)
                     {
-                        case 2:
-                            string msg = PacketReader.ReadMessage();
-                            MessageReceivedEvent?.Invoke(msg);
+                        case 2: // Login worked!
+                            WelcomeMessage?.Invoke(msg);
+                            break;
+                        case 99:
+                            NotInOurDataBaseMessage?.Invoke(msg);
                             break;
                     }
                 }

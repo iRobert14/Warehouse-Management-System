@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 
 
-namespace InventoryServer
+namespace InventoryServer.Security
 {
     public static class SecurityHelper
     {

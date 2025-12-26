@@ -1,5 +1,6 @@
 ﻿using InventoryCommon.Models;
 using InventoryCommon.Networking;
+using InventoryServer.Security;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -56,15 +57,38 @@ namespace InventoryServer.Networking
             string rawPassword = _packetReader.ReadMessage();
             string hashedPassword = SecurityHelper.ComputeHash(rawPassword);
 
-            Identity.Username = username;
-            Identity.PasswordHash = hashedPassword;
+            bool isValid = DataBaseManager.CheckUser(username, hashedPassword);
 
-            Console.WriteLine($"[Login] {Identity.Username} connected with Hash: {Identity.PasswordHash}");
+            var responsePacket = new PacketBuilder();
 
-            var welcomePacket = new PacketBuilder();
-            welcomePacket.WriteOpCode(2);
-            welcomePacket.WriteMessage($"Hello {Identity.Username}, welcome back!");
-            byte[] data = welcomePacket.GetPackageBytes();
+            if (isValid)
+            {
+                Identity.Username = username;
+                Identity.PasswordHash = hashedPassword;
+
+                Console.WriteLine($"[Login] {Identity.Username} connected with Hash: {Identity.PasswordHash}");
+                responsePacket.WriteOpCode(2);
+                responsePacket.WriteMessage($"Hello {Identity.Username}, welcome back!");
+
+
+                Program.AddToAuthenticatedClients(this);
+
+
+
+            }
+            else
+            {
+                Console.WriteLine($"[Login FAILED] {username} couldnt login!");
+
+                responsePacket.WriteOpCode(99);
+                responsePacket.WriteMessage($"ERROR: Username or password WRONG!");
+            }
+
+
+
+
+
+            byte[] data = responsePacket.GetPackageBytes();
             _clientSocket.GetStream().Write(data, 0, data.Length);
         }
 

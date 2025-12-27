@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace InventoryServer.Networking
@@ -42,9 +43,9 @@ namespace InventoryServer.Networking
 
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Client disconnected");
+                    Console.WriteLine($"Client disconnected. Reason: {ex.Message}");
                     break;
                 }
             }
@@ -57,39 +58,51 @@ namespace InventoryServer.Networking
             string rawPassword = _packetReader.ReadMessage();
             string hashedPassword = SecurityHelper.ComputeHash(rawPassword);
 
-            bool isValid = DataBaseManager.CheckUser(username, hashedPassword);
+            User authenticateUser = DataBaseManager.Authenticate(username, hashedPassword);
 
             var responsePacket = new PacketBuilder();
 
-            if (isValid)
+            if (authenticateUser != null)
             {
-                Identity.Username = username;
-                Identity.PasswordHash = hashedPassword;
+                this.Identity = authenticateUser;
 
-                Console.WriteLine($"[Login] {Identity.Username} connected with Hash: {Identity.PasswordHash}");
+                Console.WriteLine($"[SUCCESS] {Identity.Username} ({Identity.UserRole}) logged in.");
+                Console.WriteLine($"Hash used: {hashedPassword}");
+
                 responsePacket.WriteOpCode(2);
                 responsePacket.WriteMessage($"Hello {Identity.Username}, welcome back!");
+                responsePacket.WriteMessage(Identity.UserRole.ToString());
 
 
                 Program.AddToAuthenticatedClients(this);
+
+                this.SendProductList();
 
 
 
             }
             else
             {
-                Console.WriteLine($"[Login FAILED] {username} couldnt login!");
+                Console.WriteLine($"[FAILED] Login attempt: {username}");
 
                 responsePacket.WriteOpCode(99);
                 responsePacket.WriteMessage($"ERROR: Username or password WRONG!");
             }
 
-
-
-
-
             byte[] data = responsePacket.GetPackageBytes();
             _clientSocket.GetStream().Write(data, 0, data.Length);
+        }
+
+
+        private void SendProductList()
+        {
+            var products = DataBaseManager.GetAllProducts();
+            string jsonProdutcs = JsonSerializer.Serialize(products);
+            var responsePacket = new PacketBuilder();
+            responsePacket.WriteOpCode(3);
+            responsePacket.WriteMessage(jsonProdutcs);
+            _clientSocket.GetStream().Write(responsePacket.GetPackageBytes(), 0, responsePacket.GetPackageBytes().Length);
+
         }
 
     }

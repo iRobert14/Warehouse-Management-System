@@ -9,12 +9,12 @@ namespace InventoryCommon.Models
     public enum UserRole
     {
         Admin,
-        Cashier,
-        Manager
+        Manager,
+        Employee
     }
     public class User
     {
-        Guid UserId { get; set; }
+       public int UserId { get;  set; }
         public string Username { get; set; }
         public UserRole UserRole { get; set; }
         public string PasswordHash { get; set; }

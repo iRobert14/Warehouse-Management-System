@@ -48,7 +48,7 @@ namespace InventoryServer
         public static void AddToAuthenticatedClients(ClientConnection client)
         {
             _connections.Add(client);
-            Console.WriteLine($"People logged: {_connections.Count}");
+           
         }
     }
 }

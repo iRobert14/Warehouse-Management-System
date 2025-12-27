@@ -28,7 +28,9 @@ namespace InventoryClient.MVVM.ViewModel
             _server = new ServerConnection();
             _server.WelcomeMessage += HandleWelcome;
             _server.NotInOurDataBaseMessage += HandleErrorLogin;
+            //_server.ProductsReceived += functieCeva;
 
+            
 
             ConnectToServerCommand = new RelayCommand(o =>
             {
@@ -55,9 +57,12 @@ namespace InventoryClient.MVVM.ViewModel
             });
         }
 
-        private void HandleWelcome(string message)
+        private void HandleWelcome(string message,string role)
         {
-            Application.Current.Dispatcher.Invoke(() => MessageBox.Show(message));
+            Application.Current.Dispatcher.Invoke(() =>
+           {
+               MessageBox.Show($"{message} \nYour role is: {role}");
+           });
             
         }
         private void HandleErrorLogin(string message)

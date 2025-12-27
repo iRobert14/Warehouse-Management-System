@@ -1,9 +1,11 @@
-﻿using InventoryCommon.Networking;
+﻿using InventoryCommon.Models;
+using InventoryCommon.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -14,7 +16,8 @@ namespace InventoryClient
         private TcpClient _serverSocket;
         public PacketReader PacketReader;
 
-        public event Action<string> WelcomeMessage;
+        public event Action<string,string> WelcomeMessage;
+        public event Action<List<Product>> ProductsReceived;
         public event Action<string> NotInOurDataBaseMessage;
 
         public ServerConnection()
@@ -36,19 +39,19 @@ namespace InventoryClient
                     Task.Run(() => ListenFromServer());
                 }
 
-                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-                    {
-                        var loginPacket = new PacketBuilder();
-                        loginPacket.WriteOpCode(1);
-                        loginPacket.WriteMessage(username);
-                        loginPacket.WriteMessage(password);
+                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                {
+                    var loginPacket = new PacketBuilder();
+                    loginPacket.WriteOpCode(1);
+                    loginPacket.WriteMessage(username);
+                    loginPacket.WriteMessage(password);
 
-                        var data = loginPacket.GetPackageBytes();
-                        _serverSocket.GetStream().Write(data, 0, data.Length);
+                    var data = loginPacket.GetPackageBytes();
+                    _serverSocket.GetStream().Write(data, 0, data.Length);
 
 
-                    }
-                
+                }
+
             }
             catch (Exception ex)
             {
@@ -65,15 +68,26 @@ namespace InventoryClient
                 {
 
                     byte opcode = PacketReader.ReadOpCode();
-                    string msg = PacketReader.ReadMessage();
+
+
 
                     switch (opcode)
                     {
                         case 2: // Login worked!
-                            WelcomeMessage?.Invoke(msg);
+                            string welcomeMsg = PacketReader.ReadMessage(); 
+                            string role = PacketReader.ReadMessage();        
+                            WelcomeMessage?.Invoke(welcomeMsg, role);
                             break;
-                        case 99:
-                            NotInOurDataBaseMessage?.Invoke(msg);
+
+                        case 3: // Getting products
+                            string json = PacketReader.ReadMessage(); 
+                            var products = JsonSerializer.Deserialize<List<Product>>(json);
+                            ProductsReceived?.Invoke(products); 
+                            break;
+
+                        case 99: // Login failed
+                            string errorMsg = PacketReader.ReadMessage();
+                            NotInOurDataBaseMessage?.Invoke(errorMsg);
                             break;
                     }
                 }

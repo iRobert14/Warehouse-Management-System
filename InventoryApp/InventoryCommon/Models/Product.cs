@@ -1,13 +1,13 @@
 ﻿namespace InventoryCommon.Models
 {
-     class Product
+    public class Product
     {
-        Guid ID { get; set; }
-        string Name { get; set; }
-        string SKU { get; set; }
-        decimal Price { get; set; }
-        string Category { get; set; }
-        uint  Quantity { get; set; }
+        public Guid ID { get;  set; }
+        public string Name { get; set; }
+        public string SKU { get; set; }
+        public decimal Price { get; set; }
+        public string Category { get; set; }
+        public uint Quantity { get; set; }
 
 
     }
